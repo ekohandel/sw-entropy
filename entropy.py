@@ -16,8 +16,8 @@ parser.add_argument('--avg-window', dest='avg_window', help='Averaging window si
 args = parser.parse_args()
 
 repo = Repo(os.path.abspath(args.path))
-head = repo.create_head(args.branch)
-commit = head.commit
+repo.git.checkout(args.branch)
+commit = repo.head.commit
 
 entropy_entries = {
     'datetime': [],
@@ -28,13 +28,8 @@ bar = progressbar.ProgressBar(max_value=args.max_count)
 
 while (len(entropy_entries['entropy']) < args.max_count):
 
-    number_of_changed_files = commit.stats.total['files']
-    entrop_of_commit = 0
-    try:
-        entropy_of_commit = math.log(number_of_changed_files, 2)
-    except:
-        pass
     time_of_entropy = commit.committed_datetime
+    entropy_of_commit = commit.stats.total['files']
 
     entropy_entries['datetime'].append(time_of_entropy)
     entropy_entries['entropy'].append(entropy_of_commit)
@@ -54,20 +49,17 @@ x_data = matplotlib.dates.date2num(df['datetime'])
 
 plt.figure(1)
 
-plt.subplot(3, 1, 1)
+p = plt.subplot(2, 1, 1)
 plt.plot_date(x_data, df['entropy'], 'b-', label='Raw Data')
+plt.yscale('log')
 plt.autoscale(True)
 plt.grid()
 plt.legend()
 
-plt.subplot(3, 1, 2)
+plt.subplot(2, 1, 2)
 plt.plot_date(x_data, df['entropy_moving_average'], 'r-', label='Moving Average')
-plt.autoscale(True)
-plt.grid()
-plt.legend()
-
-plt.subplot(3, 1, 3)
 plt.plot_date(x_data, df['entropy_cumulative_average'], 'g-', label='Cumulative Average')
+plt.yscale('log')
 plt.autoscale(True)
 plt.grid()
 plt.legend()
